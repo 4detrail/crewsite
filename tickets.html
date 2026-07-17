@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destek - Crew SMP</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div class="vignette-overlay"></div>
+    
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-glow"></div>
+                <h1 class="logo-text">CREW SMP</h1>
+            </div>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link">Ana Sayfa</a>
+                <a href="channels.html" class="nav-link">Kanallar</a>
+                <a href="market.html" class="nav-link">Market</a>
+                <a href="tickets.html" class="nav-link active">Destek</a>
+                <a href="login.html" class="nav-link nav-cta">Giriş Yap</a>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Tema Değiştir">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="hamburger" id="hamburger" aria-label="Menü">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <span class="page-number">04</span>
+            <h1 class="page-title">Destek Talebi</h1>
+            <p class="page-subtitle">Soru ve sorunlarınız için ticket oluşturun</p>
+        </div>
+    </section>
+
+    <div class="tickets-container">
+        <div class="container">
+            <div id="loginPrompt" class="login-prompt">
+                <div class="prompt-icon">🔒</div>
+                <h2 class="prompt-title">Giriş Gerekli</h2>
+                <p class="prompt-text">Destek talebi oluşturmak için lütfen giriş yapın veya hesap oluşturun.</p>
+                <div class="prompt-actions">
+                    <a href="login.html" class="btn btn-primary">Giriş Yap</a>
+                    <a href="register.html" class="btn btn-outline">Kayıt Ol</a>
+                </div>
+            </div>
+
+            <div id="ticketSection" style="display: none;">
+                <div class="tickets-grid">
+                    <div class="ticket-form-card">
+                        <h2 class="form-title">Yeni Destek Talebi</h2>
+                        <form id="ticketForm" class="ticket-form">
+                            <div class="form-group">
+                                <label for="ticketTitle" class="form-label">Konu</label>
+                                <input type="text" id="ticketTitle" class="form-input" placeholder="Sorunun kısaca anlat" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="ticketCategory" class="form-label">Kategori</label>
+                                <select id="ticketCategory" class="form-input" required>
+                                    <option value="">Kategori seçin</option>
+                                    <option value="teknik">Teknik Sorun</option>
+                                    <option value="hesap">Hesap Sorunu</option>
+                                    <option value="ban">Ban/Ceza İtirazı</option>
+                                    <option value="öneri">Öneri</option>
+                                    <option value="diger">Diğer</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="ticketDescription" class="form-label">Açıklama</label>
+                                <textarea id="ticketDescription" class="form-input" rows="6" placeholder="Sorununuzu detaylı bir şekilde anlatın" required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span class="btn-text">Destek Talebi Oluştur</span>
+                                <span class="btn-glow"></span>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="my-tickets-card">
+                        <h2 class="form-title">Taleplerim</h2>
+                        <div id="ticketsList" class="tickets-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">📬</div>
+                                <p>Henüz destek talebiniz yok</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">CREW SMP</h3>
+                    <p class="footer-text">Türkiye'nin en iyi Minecraft survival sunucusu.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">Hızlı Linkler</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Ana Sayfa</a></li>
+                        <li><a href="channels.html">Kanallar</a></li>
+                        <li><a href="market.html">Market</a></li>
+                        <li><a href="tickets.html">Destek</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p class="footer-copy">&copy; 2026 Hexages Games. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <p class="cookie-text">
+                Bu site Hexages Games güvenlik sistemlerini kullanmaktadır. 
+                <a href="cookies.html" class="cookie-link">Çerez politikalarımızı</a> okuyabilirsiniz.
+            </p>
+            <button class="cookie-btn" onclick="acceptCookies()">Anladım</button>
+        </div>
+    </div>
+
+    <script type="module" src="tickets.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanallar - Crew SMP</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body class="dark-theme">
+    <div class="vignette-overlay"></div>
+    
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <div class="logo-glow"></div>
+                <h1 class="logo-text">CREW SMP</h1>
+            </div>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link">Ana Sayfa</a>
+                <a href="channels.html" class="nav-link active">Kanallar</a>
+                <a href="market.html" class="nav-link">Market</a>
+                <a href="tickets.html" class="nav-link">Destek</a>
+                <a href="login.html" class="nav-link nav-cta">Giriş Yap</a>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Tema Değiştir">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="hamburger" id="hamburger" aria-label="Menü">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <span class="page-number">03</span>
+            <h1 class="page-title">İçerik Üreticilerimiz</h1>
+            <p class="page-subtitle">Crew SMP'de içerik üreten harika kanallarımızı keşfedin</p>
+        </div>
+    </section>
+
+    <section class="videos-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Son Videolar</h2>
+                <p class="section-subtitle">Muffin Karides'in en son yayınlanan içerikleri</p>
+            </div>
+            
+            <div class="videos-grid" id="videosGrid">
+                <div class="video-skeleton">
+                    <div class="skeleton-thumbnail"></div>
+                    <div class="skeleton-text"></div>
+                </div>
+                <div class="video-skeleton">
+                    <div class="skeleton-thumbnail"></div>
+                    <div class="skeleton-text"></div>
+                </div>
+                <div class="video-skeleton">
+                    <div class="skeleton-thumbnail"></div>
+                    <div class="skeleton-text"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="channels-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Ana Kanal</h2>
+                <p class="section-subtitle">Sunucumuzun kurucusu</p>
+            </div>
+            
+            <div class="channels-grid">
+                <div class="channel-card main-channel">
+                    <div class="channel-avatar">
+                        <img src="https://yt3.googleusercontent.com/ytc/AIdro_mI9uOBnL4FxTZ5-lqSZJ9Y0AqVPmE3VqOdLgLYYw=s176-c-k-c0x00ffffff-no-rj" alt="Muffin Karides" loading="lazy">
+                        <div class="channel-badge">🦐</div>
+                    </div>
+                    <div class="channel-info">
+                        <h3 class="channel-name">Muffin Karides</h3>
+                        <p class="channel-handle">@MuffinKarides</p>
+                        <p class="channel-desc">Crew SMP'nin kurucusu ve ana içerik üreticisi</p>
+                        <div class="channel-links">
+                            <a href="https://www.youtube.com/channel/UCpr85MloJqbS0kWZ8RLd5-g" target="_blank" class="btn btn-outline btn-small">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                <span>YouTube</span>
+                            </a>
+                            <a href="https://discord.gg/xwarWUZeSR" target="_blank" class="btn btn-outline btn-small">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                                </svg>
+                                <span>Discord</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="channels-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Kardeş Kanallar</h2>
+                <p class="section-subtitle">Crew SMP topluluğunun değerli üyeleri</p>
+            </div>
+            
+            <div class="channels-grid">
+                <div class="channel-card">
+                    <div class="channel-avatar">
+                        <img src="https://via.placeholder.com/120x120/8B00FF/ffffff?text=M" alt="Mertsx" loading="lazy">
+                    </div>
+                    <div class="channel-info">
+                        <h3 class="channel-name">Mertsx</h3>
+                        <p class="channel-handle">@mertsx6565</p>
+                        <div class="channel-links">
+                            <a href="https://www.youtube.com/@Mertsx" target="_blank" class="btn btn-outline btn-small">
+                                <span>YouTube</span>
+                            </a>
+                            <a href="https://discord.gg/hr4t8S3B8T" target="_blank" class="btn btn-outline btn-small">
+                                <span>Discord</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="channel-card">
+                    <div class="channel-avatar">
+                        <img src="https://via.placeholder.com/120x120/8B00FF/ffffff?text=B" alt="Bera" loading="lazy">
+                    </div>
+                    <div class="channel-info">
+                        <h3 class="channel-name">Bera</h3>
+                        <p class="channel-handle">@beraonyt</p>
+                        <div class="channel-links">
+                            <a href="https://youtube.com/@beraon?si=CqQCUu-CnSijpBWK" target="_blank" class="btn btn-outline btn-small">
+                                <span>YouTube</span>
+                            </a>
+                            <a href="https://discord.gg/BSDfQrqVt" target="_blank" class="btn btn-outline btn-small">
+                                <span>Discord</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="channel-card">
+                    <div class="channel-avatar">
+                        <img src="https://via.placeholder.com/120x120/8B00FF/ffffff?text=D" alt="Downsendromlu" loading="lazy">
+                    </div>
+                    <div class="channel-info">
+                        <h3 class="channel-name">Downsendromlu</h3>
+                        <p class="channel-handle">@downsendromlu</p>
+                        <div class="channel-links">
+                            <a href="https://www.youtube.com/@mmorss_mc" target="_blank" class="btn btn-outline btn-small">
+                                <span>YouTube</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="channel-card">
+                    <div class="channel-avatar">
+                        <img src="https://via.placeholder.com/120x120/8B00FF/ffffff?text=W" alt="Wollzzy" loading="lazy">
+                    </div>
+                    <div class="channel-info">
+                        <h3 class="channel-name">Wollzzy</h3>
+                        <p class="channel-handle">@wollzzy83</p>
+                        <div class="channel-links">
+                            <a href="https://www.youtube.com/@wollzzy" target="_blank" class="btn btn-outline btn-small">
+                                <span>YouTube</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">CREW SMP</h3>
+                    <p class="footer-text">Türkiye'nin en iyi Minecraft survival sunucusu.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">Hızlı Linkler</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Ana Sayfa</a></li>
+                        <li><a href="channels.html">Kanallar</a></li>
+                        <li><a href="market.html">Market</a></li>
+                        <li><a href="tickets.html">Destek</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p class="footer-copy">&copy; 2026 Hexages Games. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <p class="cookie-text">
+                Bu site Hexages Games güvenlik sistemlerini kullanmaktadır. 
+                <a href="cookies.html" class="cookie-link">Çerez politikalarımızı</a> okuyabilirsiniz.
+            </p>
+            <button class="cookie-btn" onclick="acceptCookies()">Anladım</button>
+        </div>
+    </div>
+
+    <script src="youtube.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
