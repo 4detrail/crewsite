@@ -57,7 +57,7 @@ if (registerForm) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             localStorage.setItem('username', username);
             showNotification('Hesap ba\u015Far\u0131yla olu\u015Fturuldu!', 'success');
-            setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+            setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
         } catch (error) {
             let errorMessage = 'Kay\u0131t s\u0131ras\u0131nda bir hata olu\u015Ftu!';
             if (error.code === 'auth/email-already-in-use') errorMessage = 'Bu e-posta adresi zaten kullan\u0131l\u0131yor!';
@@ -77,7 +77,7 @@ if (loginForm) {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             showNotification('Giri\u015F ba\u015Far\u0131l\u0131!', 'success');
-            setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+            setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
         } catch (error) {
             let errorMessage = 'Giri\u015F s\u0131ras\u0131nda bir hata olu\u015Ftu!';
             if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') errorMessage = 'Hatal\u0131 e-posta veya \u015Fifre!';
@@ -91,15 +91,27 @@ if (loginForm) {
 const googleLoginBtn = document.getElementById('googleLoginBtn');
 const googleRegisterBtn = document.getElementById('googleRegisterBtn');
 
-const handleGoogleSignIn = async () => {
+const handleGoogleSignIn = async (e) => {
+    if (e) e.preventDefault();
     try {
-        await signInWithPopup(auth, googleProvider);
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        localStorage.setItem('username', user.displayName || 'Oyuncu');
         showNotification('Google ile giri\u015F ba\u015Far\u0131l\u0131!', 'success');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
     } catch (error) {
+        console.error('Google giri\u015F hatas\u0131:', error.code, error.message);
         if (error.code === 'auth/popup-closed-by-user') return;
         if (error.code === 'auth/cancelled-popup-request') return;
-        showNotification('Google ile giri\u015F s\u0131ras\u0131nda bir hata olu\u015Ftu!', 'error');
+        if (error.code === 'auth/popup-blocked') {
+            showNotification('Pop-up engellendi! L\u00FCtfen pop-up engelleyicisini kapat\u0131n.', 'error');
+        } else if (error.code === 'auth/unauthorized-domain') {
+            showNotification('Bu alan ad\u0131nda Google giri\u015F yap\u0131lam\u0131yor. Firebase konsolunda alan ad\u0131n\u0131z\u0131 do\u011Frulay\u0131n.', 'error');
+        } else if (error.code === 'auth/operation-not-allowed') {
+            showNotification('Google giri\u015F y\u00F6ntemi aktif de\u011Fil. Firebase konsolundan etkinle\u015Ftirin.', 'error');
+        } else {
+            showNotification('Google ile giri\u015F s\u0131ras\u0131nda hata: ' + (error.message || 'Bilinmeyen hata'), 'error');
+        }
     }
 };
 
@@ -107,21 +119,16 @@ googleLoginBtn?.addEventListener('click', handleGoogleSignIn);
 googleRegisterBtn?.addEventListener('click', handleGoogleSignIn);
 
 onAuthStateChanged(auth, (user) => {
+    const navCta = document.querySelector('.nav-cta');
     if (user) {
-        const navCta = document.querySelector('.nav-cta');
         if (navCta) {
-            navCta.textContent = '\u00C7\u0131k\u0131\u015F Yap';
-            navCta.href = '#';
-            navCta.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    await signOut(auth);
-                    showNotification('\u00C7\u0131k\u0131\u015F yap\u0131ld\u0131!', 'success');
-                    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-                } catch (error) {
-                    showNotification('\u00C7\u0131k\u0131\u015F yap\u0131l\u0131rken hata olu\u015Ftu!', 'error');
-                }
-            });
+            navCta.textContent = 'Profilim';
+            navCta.href = 'profile.html';
+        }
+    } else {
+        if (navCta && navCta.textContent.includes('rofil')) {
+            navCta.textContent = 'Giri\u015F Yap';
+            navCta.href = 'login.html';
         }
     }
 });
