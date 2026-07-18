@@ -1,42 +1,44 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import {
     getAuth,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
     GoogleAuthProvider,
-    setPersistence,
-    browserLocalPersistence
+    onAuthStateChanged,
+    signOut
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getFirebaseApp } from './firebase-config.js';
-import { showNotification } from './admin.js';
 
-const app = getFirebaseApp();
+const firebaseConfig = {
+    apiKey: "AIzaSyC4Pok6O8s3NU4ImmfOWSDdoBMt3uDTbLw",
+    authDomain: "crew-universe.firebaseapp.com",
+    projectId: "crew-universe",
+    storageBucket: "crew-universe.firebasestorage.app",
+    messagingSenderId: "365765069306",
+    appId: "1:365765069306:web:2ecd7e320215c09b027c43",
+    measurementId: "G-MQ5PZLD16W"
+};
+
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
-// Kullanıcıya her seferinde hesap seçtirir, "sessiz" (tek hesaba sabitlenmiş) hatalı girişleri önler.
-googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// Oturumun tarayıcı kapansa bile kalıcı olmasını sağla (bazı ortamlarda
-// varsayılan persistence ayarı Google popup sonrası oturumun "kaybolmuş"
-// gibi görünmesine, yani "giriş hatası" izlenimine yol açabiliyordu).
-setPersistence(auth, browserLocalPersistence).catch(() => {});
-
-async function saveUserProfile(user, extra = {}) {
-    try {
-        await setDoc(doc(db, 'users', user.uid), {
-            email: user.email || '',
-            username: extra.username || user.displayName || (user.email ? user.email.split('@')[0] : 'Oyuncu'),
-            photoURL: user.photoURL || '',
-            updatedAt: serverTimestamp(),
-            createdAt: extra.isNew ? serverTimestamp() : undefined
-        }, { merge: true });
-    } catch (err) {
-        console.error('Profil kaydedilemedi:', err);
-    }
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = 'notification ' + type;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed; top: 100px; right: 2rem;
+        background: ${type === 'success' ? '#8B00FF' : '#ff4444'};
+        color: white; padding: 1rem 1.5rem; border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); z-index: 10000;
+        font-weight: 600; animation: slideInRight 0.3s ease-out;
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 const registerForm = document.getElementById('registerForm');
@@ -48,17 +50,20 @@ if (registerForm) {
         const confirmPassword = document.getElementById('confirmPassword').value;
         const username = document.getElementById('username').value;
 
-        if (password !== confirmPassword) { showNotification('Şifreler eşleşmiyor!', 'error'); return; }
-        if (password.length < 6) { showNotification('Şifre en az 6 karakter olmalıdır!', 'error'); return; }
+        if (password !== confirmPassword) { showNotification('\u015Eifreler e\u015Fle\u015Fmiyor!', 'error'); return; }
+        if (password.length < 6) { showNotification('\u015Eifre en az 6 karakter olmal\u0131d\u0131r!', 'error'); return; }
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             localStorage.setItem('username', username);
-            await saveUserProfile(userCredential.user, { username, isNew: true });
-            showNotification('Hesap başarıyla oluşturuldu!', 'success');
+            showNotification('Hesap ba\u015Far\u0131yla olu\u015Fturuldu!', 'success');
             setTimeout(() => { window.location.href = 'index.html'; }, 1500);
         } catch (error) {
-            showNotification(mapAuthError(error), 'error');
+            let errorMessage = 'Kay\u0131t s\u0131ras\u0131nda bir hata olu\u015Ftu!';
+            if (error.code === 'auth/email-already-in-use') errorMessage = 'Bu e-posta adresi zaten kullan\u0131l\u0131yor!';
+            else if (error.code === 'auth/invalid-email') errorMessage = 'Ge\u00E7ersiz e-posta adresi!';
+            else if (error.code === 'auth/weak-password') errorMessage = '\u015Eifre \u00E7ok zay\u0131f!';
+            showNotification(errorMessage, 'error');
         }
     });
 }
@@ -71,10 +76,14 @@ if (loginForm) {
         const password = document.getElementById('password').value;
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            showNotification('Giriş başarılı!', 'success');
-            setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+            showNotification('Giri\u015F ba\u015Far\u0131l\u0131!', 'success');
+            setTimeout(() => { window.location.href = 'index.html'; }, 1500);
         } catch (error) {
-            showNotification(mapAuthError(error), 'error');
+            let errorMessage = 'Giri\u015F s\u0131ras\u0131nda bir hata olu\u015Ftu!';
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') errorMessage = 'Hatal\u0131 e-posta veya \u015Fifre!';
+            else if (error.code === 'auth/invalid-email') errorMessage = 'Ge\u00E7ersiz e-posta adresi!';
+            else if (error.code === 'auth/too-many-requests') errorMessage = '\u00C7ok fazla ba\u015Far\u0131s\u0131z deneme! L\u00FCtfen daha sonra tekrar deneyin.';
+            showNotification(errorMessage, 'error');
         }
     });
 }
@@ -84,58 +93,37 @@ const googleRegisterBtn = document.getElementById('googleRegisterBtn');
 
 const handleGoogleSignIn = async () => {
     try {
-        const result = await signInWithPopup(auth, googleProvider);
-        await saveUserProfile(result.user, { isNew: true });
-        showNotification('Google ile giriş başarılı!', 'success');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+        await signInWithPopup(auth, googleProvider);
+        showNotification('Google ile giri\u015F ba\u015Far\u0131l\u0131!', 'success');
+        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
     } catch (error) {
-        // Popup engellendiyse veya ortam popup'ı desteklemiyorsa (bazı mobil
-        // tarayıcılar / uygulama içi web görünümleri) yönlendirme (redirect)
-        // akışına otomatik geç. Bu, "Google ile girişte hata oluyor" sorununun
-        // en yaygın sebebiydi.
-        if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-            return; // kullanıcı kendi kapattı, hata gösterme
-        }
-        if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
-            showNotification('Popup engellendi, yönlendiriliyorsunuz...', 'success');
-            try { await signInWithRedirect(auth, googleProvider); } catch (redirectErr) {
-                showNotification(mapAuthError(redirectErr), 'error');
-            }
-            return;
-        }
-        showNotification(mapAuthError(error), 'error');
+        if (error.code === 'auth/popup-closed-by-user') return;
+        if (error.code === 'auth/cancelled-popup-request') return;
+        showNotification('Google ile giri\u015F s\u0131ras\u0131nda bir hata olu\u015Ftu!', 'error');
     }
 };
 
 googleLoginBtn?.addEventListener('click', handleGoogleSignIn);
 googleRegisterBtn?.addEventListener('click', handleGoogleSignIn);
 
-// Sayfa signInWithRedirect sonrası tekrar yüklendiğinde sonucu yakala.
-getRedirectResult(auth).then(async (result) => {
-    if (result?.user) {
-        await saveUserProfile(result.user, { isNew: true });
-        showNotification('Google ile giriş başarılı!', 'success');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        const navCta = document.querySelector('.nav-cta');
+        if (navCta) {
+            navCta.textContent = '\u00C7\u0131k\u0131\u015F Yap';
+            navCta.href = '#';
+            navCta.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await signOut(auth);
+                    showNotification('\u00C7\u0131k\u0131\u015F yap\u0131ld\u0131!', 'success');
+                    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+                } catch (error) {
+                    showNotification('\u00C7\u0131k\u0131\u015F yap\u0131l\u0131rken hata olu\u015Ftu!', 'error');
+                }
+            });
+        }
     }
-}).catch((error) => {
-    if (error.code) showNotification(mapAuthError(error), 'error');
 });
-
-function mapAuthError(error) {
-    const code = error?.code || '';
-    const map = {
-        'auth/email-already-in-use': 'Bu e-posta adresi zaten kullanılıyor!',
-        'auth/invalid-email': 'Geçersiz e-posta adresi!',
-        'auth/weak-password': 'Şifre çok zayıf!',
-        'auth/user-not-found': 'Hatalı e-posta veya şifre!',
-        'auth/wrong-password': 'Hatalı e-posta veya şifre!',
-        'auth/invalid-credential': 'Hatalı e-posta veya şifre!',
-        'auth/too-many-requests': 'Çok fazla başarısız deneme! Lütfen daha sonra tekrar deneyin.',
-        'auth/unauthorized-domain': "Bu site alan adı Firebase Console'da yetkilendirilmemiş. (Authentication > Settings > Authorized domains kısmına bu domaini ekleyin.)",
-        'auth/operation-not-allowed': "Google ile giriş, Firebase Console'da etkinleştirilmemiş görünüyor. (Authentication > Sign-in method > Google)",
-        'auth/network-request-failed': 'Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.'
-    };
-    return map[code] || 'İşlem sırasında bir hata oluştu! (' + (code || 'bilinmiyor') + ')';
-}
 
 export { auth, googleProvider };
