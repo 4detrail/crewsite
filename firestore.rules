@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// ============================================================
+// CREW SMP — Firestore Güvenlik Kuralları
+// ============================================================
+// Bu dosyayı Firebase Console > Firestore Database > Rules
+// sekmesine yapıştırıp "Publish" (Yayınla) demeniz gerekir.
+// Sadece kod içinde admin.js ile yapılan istemci taraflı kontrol
+// YETERLİ DEĞİLDİR — gerçek güvenlik burada sağlanır. Bu kurallar
+// olmadan herhangi bir kullanıcı tarayıcı konsolundan Firestore'a
+// doğrudan yazıp kendini admin yapabilir veya ticketlara admin
+// yanıtı ekleyebilir.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // admins/{uid} -> sadece mevcut adminler tarafından okunabilir/yazılabilir.
+    // İlk admini Firebase Console'dan elle eklemeniz gerekir (bkz. README).
+    match /admins/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // users/{uid} -> kullanıcı sadece kendi profilini okuyup yazabilir.
+    // Adminler tüm profilleri okuyabilir.
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin();
+    }
+
+    // launcher_tickets/{ticketId}
+    // - Herkes kendi ticketını oluşturabilir.
+    // - Sahibi ve adminler kendi/tüm ticketları okuyabilir.
+    // - SADECE ADMİNLER status / adminReply alanlarını güncelleyebilir.
+    // - Normal kullanıcı kendi ticketının içeriğini SONRADAN değiştiremez
+    //   (ticket manipülasyonunu önlemek için).
+    match /launcher_tickets/{ticketId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // news/{newsId} -> herkes okuyabilir, sadece adminler oluşturur/siler/günceller.
+    match /news/{newsId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+
+      // news/{newsId}/responses/{responseId}
+      // - Giriş yapan herkes kendi yanıtını oluşturabilir (bir kez).
+      // - Yanıt sahibi ve adminler okuyabilir.
+      // - Yanıtlar sonradan değiştirilemez/silinemez (form bütünlüğü için).
+      match /responses/{responseId} {
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+        allow update, delete: if isAdmin();
+      }
+    }
+  }
+}

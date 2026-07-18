@@ -1,49 +1,36 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import {
-    getFirestore, collection, addDoc, query, where, orderBy,
+    getFirestore, collection, addDoc, doc, updateDoc, query, where, orderBy,
     onSnapshot, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirebaseApp } from './firebase-config.js';
+import { isAdmin, showNotification } from './admin.js';
 
-const firebaseConfig = {
-    apiKey: "AIzaSyC4Pok6O8s3NU4ImmfOWSDdoBMt3uDTbLw",
-    authDomain: "crew-universe.firebaseapp.com",
-    projectId: "crew-universe",
-    storageBucket: "crew-universe.firebasestorage.app",
-    messagingSenderId: "365765069306",
-    appId: "1:365765069306:web:2ecd7e320215c09b027c43",
-    measurementId: "G-MQ5PZLD16W"
-};
-
-const app = initializeApp(firebaseConfig);
+const app = getFirebaseApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = 'notification ' + type;
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed; top: 100px; right: 2rem;
-        background: ${type === 'success' ? '#8B00FF' : '#ff4444'};
-        color: white; padding: 1rem 1.5rem; border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); z-index: 10000;
-        font-weight: 600; animation: slideInRight 0.3s ease-out;
-    `;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
+let currentUser = null;
+let currentUserIsAdmin = false;
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
     const loginPrompt = document.getElementById('loginPrompt');
     const ticketSection = document.getElementById('ticketSection');
     if (user) {
         loginPrompt.style.display = 'none';
         ticketSection.style.display = 'block';
-        loadUserTickets(user);
+        currentUserIsAdmin = await isAdmin(user.uid);
+        document.getElementById('adminBadgeArea')?.classList.toggle('show', currentUserIsAdmin);
+        if (currentUserIsAdmin) {
+            loadAllTicketsForAdmin();
+            document.getElementById('myTicketsCard').style.display = 'none';
+            document.getElementById('adminTicketsCard').style.display = 'block';
+        } else {
+            loadUserTickets(user);
+            document.getElementById('myTicketsCard').style.display = 'block';
+            document.getElementById('adminTicketsCard').style.display = 'none';
+        }
     } else {
         loginPrompt.style.display = 'block';
         ticketSection.style.display = 'none';
@@ -55,14 +42,14 @@ if (ticketForm) {
     ticketForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const user = auth.currentUser;
-        if (!user) { showNotification('L\u00FCtfen giri\u015F yap\u0131n!', 'error'); return; }
+        if (!user) { showNotification('Lütfen giriş yapın!', 'error'); return; }
 
         const title = document.getElementById('ticketTitle').value;
         const category = document.getElementById('ticketCategory').value;
         const description = document.getElementById('ticketDescription').value;
 
         if (!title || !category || !description) {
-            showNotification('L\u00FCtfen t\u00FCm alanlar\u0131 doldurun!', 'error');
+            showNotification('Lütfen tüm alanları doldurun!', 'error');
             return;
         }
 
@@ -70,13 +57,13 @@ if (ticketForm) {
             await addDoc(collection(db, 'launcher_tickets'), {
                 userId: user.uid, userEmail: user.email,
                 title, category, description, status: 'open',
+                adminReply: '', repliedBy: '', repliedAt: null,
                 createdAt: serverTimestamp(), updatedAt: serverTimestamp()
             });
-            showNotification('Destek talebiniz olu\u015Fturuldu!', 'success');
+            showNotification('Destek talebiniz oluşturuldu!', 'success');
             ticketForm.reset();
-            loadUserTickets(user);
         } catch (error) {
-            showNotification('Ticket olu\u015Fturulurken hata olu\u015Ftu!', 'error');
+            showNotification('Ticket oluşturulurken hata oluştu!', 'error');
         }
     });
 }
@@ -89,43 +76,124 @@ async function loadUserTickets(user) {
         const q = query(collection(db, 'launcher_tickets'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
         onSnapshot(q, (querySnapshot) => {
             if (querySnapshot.empty) {
-                ticketsList.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDCAC</div><p>Hen\u00FCz destek talebiniz yok</p></div>';
+                ticketsList.innerHTML = '<div class="empty-state"><div class="empty-icon">📬</div><p>Henüz destek talebiniz yok</p></div>';
                 return;
             }
             ticketsList.innerHTML = '';
-            querySnapshot.forEach((doc) => {
-                ticketsList.appendChild(createTicketElement(doc.data(), doc.id));
+            querySnapshot.forEach((docSnap) => {
+                ticketsList.appendChild(createTicketElement(docSnap.data(), docSnap.id, false));
             });
         });
     } catch (error) {
-        ticketsList.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDE14</div><p>Ticketlar y\u00FCklenirken hata olu\u015Ftu</p></div>';
+        ticketsList.innerHTML = '<div class="empty-state"><div class="empty-icon">😔</div><p>Ticketlar yüklenirken hata oluştu</p></div>';
     }
 }
 
-function createTicketElement(ticket, ticketId) {
+function loadAllTicketsForAdmin() {
+    const ticketsList = document.getElementById('adminTicketsList');
+    if (!ticketsList) return;
+
+    try {
+        const q = query(collection(db, 'launcher_tickets'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, (querySnapshot) => {
+            if (querySnapshot.empty) {
+                ticketsList.innerHTML = '<div class="empty-state"><div class="empty-icon">📬</div><p>Henüz hiç destek talebi yok</p></div>';
+                return;
+            }
+            ticketsList.innerHTML = '';
+            querySnapshot.forEach((docSnap) => {
+                ticketsList.appendChild(createTicketElement(docSnap.data(), docSnap.id, true));
+            });
+        });
+    } catch (error) {
+        ticketsList.innerHTML = '<div class="empty-state"><div class="empty-icon">😔</div><p>Ticketlar yüklenirken hata oluştu</p></div>';
+    }
+}
+
+function createTicketElement(ticket, ticketId, adminView) {
     const ticketItem = document.createElement('div');
     ticketItem.className = 'ticket-item';
     const createdAt = ticket.createdAt?.toDate ? formatDate(ticket.createdAt.toDate()) : 'Bilinmiyor';
     const statusClass = ticket.status === 'open' ? 'open' : 'closed';
-    const statusText = ticket.status === 'open' ? 'A\u00E7\u0131k' : 'Kapal\u0131';
+    const statusText = ticket.status === 'open' ? 'Açık' : 'Kapalı';
+
+    let replyHtml = '';
+    if (ticket.adminReply) {
+        replyHtml = `
+        <div class="ticket-admin-reply">
+            <span class="reply-badge">🛡️ Admin Yanıtı${ticket.repliedBy ? ' — ' + escapeHtml(ticket.repliedBy) : ''}</span>
+            <p>${escapeHtml(ticket.adminReply)}</p>
+        </div>`;
+    }
+
+    let adminControls = '';
+    if (adminView) {
+        adminControls = `
+        <div class="ticket-admin-controls">
+            <span class="ticket-owner">👤 ${escapeHtml(ticket.userEmail || 'bilinmiyor')}</span>
+            <textarea class="form-input ticket-reply-input" rows="2" placeholder="Yanıt yazın...">${escapeHtml(ticket.adminReply || '')}</textarea>
+            <div class="ticket-admin-actions">
+                <button class="btn btn-primary btn-small reply-btn">Yanıtla</button>
+                <button class="btn btn-outline btn-small toggle-status-btn">${ticket.status === 'open' ? 'Kapat' : 'Yeniden Aç'}</button>
+            </div>
+        </div>`;
+    }
 
     ticketItem.innerHTML = `
         <div class="ticket-header">
             <h3 class="ticket-title">${escapeHtml(ticket.title)}</h3>
             <span class="ticket-status ${statusClass}">${statusText}</span>
         </div>
-        <span class="ticket-category">\uD83D\uDCC1 ${getCategoryName(ticket.category)}</span>
+        <span class="ticket-category">📁 ${getCategoryName(ticket.category)}</span>
         <p class="ticket-description">${escapeHtml(ticket.description)}</p>
+        ${replyHtml}
         <div class="ticket-footer">
-            <span>Olu\u015Fturulma: ${createdAt}</span>
+            <span>Oluşturulma: ${createdAt}</span>
             <span>#${ticketId.substring(0, 8)}</span>
         </div>
+        ${adminControls}
     `;
+
+    if (adminView) {
+        const replyBtn = ticketItem.querySelector('.reply-btn');
+        const textarea = ticketItem.querySelector('.ticket-reply-input');
+        const toggleBtn = ticketItem.querySelector('.toggle-status-btn');
+
+        replyBtn.addEventListener('click', async () => {
+            if (!currentUserIsAdmin) { showNotification('Bu işlem için admin yetkiniz yok!', 'error'); return; }
+            const replyText = textarea.value.trim();
+            if (!replyText) { showNotification('Yanıt boş olamaz!', 'error'); return; }
+            try {
+                await updateDoc(doc(db, 'launcher_tickets', ticketId), {
+                    adminReply: replyText,
+                    repliedBy: currentUser?.email || 'Admin',
+                    repliedAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                showNotification('Yanıt gönderildi!', 'success');
+            } catch (error) {
+                showNotification('Yanıt gönderilirken hata oluştu! (Firestore kurallarını kontrol edin)', 'error');
+            }
+        });
+
+        toggleBtn.addEventListener('click', async () => {
+            if (!currentUserIsAdmin) { showNotification('Bu işlem için admin yetkiniz yok!', 'error'); return; }
+            try {
+                await updateDoc(doc(db, 'launcher_tickets', ticketId), {
+                    status: ticket.status === 'open' ? 'closed' : 'open',
+                    updatedAt: serverTimestamp()
+                });
+            } catch (error) {
+                showNotification('Durum güncellenirken hata oluştu!', 'error');
+            }
+        });
+    }
+
     return ticketItem;
 }
 
 function getCategoryName(category) {
-    const categories = { 'teknik': 'Teknik Sorun', 'hesap': 'Hesap Sorunu', 'ban': 'Ban/Ceza \u0130tiraz\u0131', '\u00F6neri': '\u00D6neri', 'diger': 'Di\u011Fer' };
+    const categories = { 'teknik': 'Teknik Sorun', 'hesap': 'Hesap Sorunu', 'ban': 'Ban/Ceza İtirazı', 'öneri': 'Öneri', 'diger': 'Diğer' };
     return categories[category] || category;
 }
 
@@ -136,16 +204,16 @@ function formatDate(date) {
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor(diff / 60000);
     if (days > 7) return date.toLocaleDateString('tr-TR', { year: 'numeric', month: 'short', day: 'numeric' });
-    if (days > 0) return `${days} g\u00FCn \u00F6nce`;
-    if (hours > 0) return `${hours} saat \u00F6nce`;
-    if (minutes > 0) return `${minutes} dakika \u00F6nce`;
-    return 'Az \u00F6nce';
+    if (days > 0) return `${days} gün önce`;
+    if (hours > 0) return `${hours} saat önce`;
+    if (minutes > 0) return `${minutes} dakika önce`;
+    return 'Az önce';
 }
 
 function escapeHtml(text) {
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = text ?? '';
     return div.innerHTML;
 }
 
-console.log('\uD83C\uDFAB Ticket System Loaded');
+console.log('🎫 Ticket System Loaded (admin-enabled)');
